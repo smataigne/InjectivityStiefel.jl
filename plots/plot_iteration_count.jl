@@ -1,5 +1,5 @@
 using LinearAlgebra, SkewLinearAlgebra, Plots, LaTeXStrings, Colors
-include("check_injectivity_radius.jl")
+include("../src/check_injectivity_radius.jl")
 
 β = 0.5
 Δρ = [1, 0.1, 0.01, 0.001, 0.0001]

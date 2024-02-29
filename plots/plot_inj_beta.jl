@@ -1,5 +1,5 @@
 using LinearAlgebra, SkewLinearAlgebra, Plots, LaTeXStrings, Colors
-include("check_injectivity_radius.jl")
+include("../src/check_injectivity_radius.jl")
 
 δ = 0.07
 dρ = [0, δ]
