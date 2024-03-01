@@ -48,12 +48,14 @@ end
     Returns true if ρ > inj. Stops at itermax otherwise and return false.
     """
     iszero(β - 1/2) || throw(ArgumentError("check_radius_canonical requires β = 1/2"))
+    #If canonical metric and n - p = 1, the search on the fiber makes no sense.
+    iszero(n - p - 1) && return ρ > π
     #Allocate memory
     Ω = zeros(n, n)
     A = zeros(p, p)
     B = zeros(n - p, p)
     temp = zeros(n, n - p)
-    G = zeros(2, 2)
+    G = zeros(n - p, n - p)
     iter = 0                              #Terminaison limit (set itermax = ∞ in theory)
     Nϕ = 1                                #Number of tries of rotation ϕ
     while iter < itermax
@@ -70,8 +72,12 @@ end
         Q = exp(skewhermitian!(Ω) .* ρ)
         temp .= Q[:, p+1:end]
 
-        for i ∈ 1:Nϕ                                  
-            givens(G, rand() * 2π)
+        for i ∈ 1:Nϕ
+            if n - p == 2              
+                givens(G, randn() * 2π)
+            else
+                G = exp(skewhermitian!(randn(n - p, n - p)))
+            end
             mul!(Q[:, p+1:end], temp, G, 1, 0)     #Rotate last columns of Q
             if dist_to_I_SOn(Q) * sqrt(2) / 2 < ρ
                 return true, iter + 1
@@ -96,9 +102,10 @@ end
     tempQ1 = zeros(n, p)
     tempQ2 = zeros(n, n - p)
     tempV = zeros(p, p)
-    G = zeros(2, 2)
+    G1 = zeros(p, p)
+    G2 = zeros(n - p, n - p)
     iter = 0                      #Terminaison limit (set itermax = ∞ in theory)
-    Nϕ = 1                        #Number of tries of rotation ϕ
+    Nϕ = 10                        #Number of tries of rotation ϕ
     while iter < itermax
         #Instantiate unit random horizontal shooting direction
         A .= randn(p, p)                    
@@ -118,17 +125,24 @@ end
         tempQ2 .= Q[:, p+1:end]
         tempV  .= V
 
-        for i ∈ 1:Nϕ    
-            givens(G, rand() * 2π)  
-            mul!(Q[:, 1:p], tempQ1, G, 1, 0)         #Rotate first columns of Q
-            mul!(V, tempV, G, 1, 0)                  #Rotate V                                #
-            givens(G, rand() * 2π)
-            mul!(Q[:, p+1:end], tempQ2, G, 1, 0)     #Rotate last columns of Q 
+        for i ∈ 1:Nϕ
+            if p == 2    
+                givens(G1, rand() * 2π)  
+            else
+                G1 = exp(skewhermitian!(randn(p, p) * 2π))
+            end
+            mul!(Q[:, 1:p], tempQ1, G1, 1, 0)         #Rotate first columns of Q
+            mul!(V, tempV, G1, 1, 0)                  #Rotate V    
+            if n - p == 2              
+                givens(G2, rand() * 2π)
+            else
+                G2 = exp(skewhermitian!(randn(n - p, n - p)))
+            end
+            mul!(Q[:, p+1:end], tempQ2, G2, 1, 0)     #Rotate last columns of Q 
             #Pseudo-Riemannian metric in total space if β > 0.5 
             Ω .=  skewlog(Q)
             Ψ .=  skewlog(V)                      
-            d = sqrt(β * norm(Ω[1:p, 1:p] - Ψ)^2 + norm(Ω[p+1:end, 1:p])^2) 
-            #d = sqrt((0.5 * dist_to_I_SOn(Q)^2 + β / (1 - 2β) * dist_to_I_SOn(V)^2))   
+            d = sqrt(β * norm(Ω[1:p, 1:p] - Ψ)^2 + norm(Ω[p+1:end, 1:p])^2)    
             if d < ρ
                 return true , iter + 1
             end
