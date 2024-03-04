@@ -1,8 +1,12 @@
 using LinearAlgebra, SkewLinearAlgebra, Plots, LaTeXStrings, Colors
 include("../src/check_injectivity_radius.jl")
 
+#Choose n,p, n > p, and δ > 0 (the smaller δ, the longer the running time)
+#Choose itermax
 n = 4; p = 2
 δ = 0.07
+itermax = 10000
+
 dρ = [0, δ]
 βs = Array(0.1:0.05:1.5)
 
@@ -13,7 +17,7 @@ for β ∈ βs
     coeff = solvef(π/2 + β, β)
     inj = (n - p > 1 ? min(π * coeff, min(sqrt(2β), 1) * π) : min(sqrt(2β), 1) * π)
     for ρ ∈ (dρ .+  inj)
-        if check_radius(ρ, β, n, p, 1000)[1]
+        if check_radius(ρ, β, n, p, itermax)[1]
             if β == 0.1
                 scatter!([β], [ρ], markershape=:circle, markercolor =:gray100,  label = "Stopped before iteration limit", markersize=5, markerstrokewidth = 2)
             else
@@ -40,5 +44,4 @@ end
 plot!(βs, injs, label = L"\min\left\{\sqrt{2\beta}\pi, \pi, t_\beta^r \sqrt{2}\right\}", linewidth = 1, color =:black, linestyle=:solid)
 xlabel!(L"\beta")
 ylabel!(L"\rho")
-#savefig(P, "./InjectivityStiefel.jl/figures/plot_injectivity_beta_0_15_5_3.pdf")
 display(P)
