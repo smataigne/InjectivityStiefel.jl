@@ -1,7 +1,10 @@
 # InjectivityStiefel.jl
 This repository is associated to the publication ["P.-A. Absil, S. Mataigne, The ultimate upper bound on the injectivity radius of the Stiefel manifold, 2024"](https://arxiv.org/abs/2403.02079).
 ## Installation
-In order to use this repository, the user should have a Julia installation where the following packages are installed: `LinearAlgebra`, `SkewLinearAlgebra`, `Plots`, `LaTeXStrings`, `Colors`. These packages are easily obtained from the Julia package installation environment.
+In order to use this repository, the user should have a Julia installation where the following packages are installed: `LinearAlgebra`, `SkewLinearAlgebra`, `Plots`, `LaTeXStrings`, `Colors`. These packages are easily obtained from the package installation environment as follows. In Julia REPL, press `]` to access the installation environment and for each package, do
+```julia
+(@v1.6) pkg> add Name_of_Package
+```
 ## Use
 This repository contains de following folders: `src`, `plots` and `figures`.  
 * The folder `src` contains the algorithms described in the paper, namely Algorithm 8.1 under the name `checkradius`. These are the routines needed to produce the results.
