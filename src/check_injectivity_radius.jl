@@ -1,4 +1,4 @@
-using LinearAlgebra, SkewLinearAlgebra, Plots, LaTeXStrings
+using LinearAlgebra, SkewLinearAlgebra, Distributions
 include("skewlog.jl")
 
 @views function  dist_to_I_SOn(Q::AbstractMatrix)
@@ -49,7 +49,7 @@ end
     """
     iszero(β - 1/2) || throw(ArgumentError("check_radius_canonical requires β = 1/2"))
     #If canonical metric and n - p = 1, the search on the fiber makes no sense.
-    iszero(n - p - 1) && return ρ > π
+    iszero(n - p - 1) && return ρ > π, 1
     #Allocate memory
     Ω = zeros(n, n)
     A = zeros(p, p)
@@ -57,7 +57,9 @@ end
     temp = zeros(n, n - p)
     G = zeros(n - p, n - p)
     iter = 0                              #Terminaison limit (set itermax = ∞ in theory)
-    Nϕ = 1                                #Number of tries of rotation ϕ
+    Nϕ = 5                                #Number of initial guesses on the fiber
+    α = 0.5                               #Stepsize for gradient method
+    ∇tol = 1e-3; ∇max = 40                #Gradient descent parameters
     while iter < itermax
         #Instantiate unit random horizontal shooting direction
         A .= randn(p, p)                    
@@ -79,13 +81,32 @@ end
                 G = exp(skewhermitian!(randn(n - p, n - p)))
             end
             mul!(Q[:, p+1:end], temp, G, 1, 0)     #Rotate last columns of Q
+            #Gradient descent over squared distance on the fiber
+            ∇iter = 0
+            ∇Q = skewlog(Q)[p+1:end, p+1:end]
+            while norm(∇Q) > ∇tol && ∇iter < ∇max
+                temp .= Q[:, p+1:end]
+                ∇Q = skewlog(Q)[p+1:end, p+1:end]
+                G = exp(-α * ∇Q)
+                mul!(Q[:, p+1:end], temp, G, 1, 0)     #Rotate last columns of Q
+                ∇iter += 1
+            end
             if dist_to_I_SOn(Q) * sqrt(2) / 2 < ρ
+                print("ρ is not the injectivity radius \n")
                 return true, iter + 1
             end
         end
         iter +=1
     end
+    print("ρ may be  the injectivity radius \n")
     return false, iter
+end
+
+@views function choose_logarithm!(V::AbstractVector, K::AbstractVector)
+    for i ∈ 1:2:length(V)
+        V[i] .+= K[(i+1)÷2] * 1im * 2π
+        V[i + 1] .-= K[(i+1)÷2] * 1im * 2π
+    end
 end
 
 @views function check_radius(ρ::Real, β::Real, n::Integer, p::Integer, itermax::Integer)
@@ -104,8 +125,10 @@ end
     tempV = zeros(p, p)
     G1 = zeros(p, p)
     G2 = zeros(n - p, n - p)
-    iter = 0                      #Terminaison limit (set itermax = ∞ in theory)
-    Nϕ = 10                        #Number of tries of rotation ϕ
+    iter = 0                       #Terminaison limit (set itermax = ∞ in theory)
+    Nϕ = 1                         #Number of initial guesses on the fiber
+    α = 0.5                        #Stepsize for gradient method
+    ∇tol = 1e-1; ∇max = 100        #Gradient descent parameters
     while iter < itermax
         #Instantiate unit random horizontal shooting direction
         A .= randn(p, p)                    
@@ -124,7 +147,6 @@ end
         tempQ1 .= Q[:, 1:p]
         tempQ2 .= Q[:, p+1:end]
         tempV  .= V
-
         for i ∈ 1:Nϕ
             if p == 2    
                 givens(G1, rand() * 2π)  
@@ -140,15 +162,34 @@ end
             end
             mul!(Q[:, p+1:end], tempQ2, G2, 1, 0)     #Rotate last columns of Q 
             #Pseudo-Riemannian metric in total space if β > 0.5 
+            #Gradient descent over squared distance on the fiber
+            ∇Q = skewlog(Q)[p+1:end, p+1:end]
+            ∇V = skewlog(V)
+            ∇iter = 0
+            while norm(∇Q) + norm(∇V) > ∇tol && ∇iter < ∇max
+                tempQ1 .= Q[:, 1:p]
+                tempQ2 .= Q[:, p+1:end]
+                tempV  .= V
+                ∇Q = skewlog(Q)[p+1:end, p+1:end]
+                ∇V = skewlog(V)
+                G2 =  exp(-2α * ∇Q)
+                G1 =  exp(-α * ∇V)
+                mul!(Q[:, 1:p], tempQ1, G1, 1, 0)         #Rotate first columns of Q
+                mul!(V, tempV, G1, 1, 0)                  #Rotate V   
+                mul!(Q[:, p+1:end], tempQ2, G2, 1, 0)     #Rotate last columns of Q  
+                ∇iter += 1
+            end
             Ω .=  skewlog(Q)
-            Ψ .=  skewlog(V)                      
-            d = sqrt(β * norm(Ω[1:p, 1:p] - Ψ)^2 + norm(Ω[p+1:end, 1:p])^2)    
+            Ψ .=  skewlog(V)                 
+            d = sqrt(β * norm(Ω[1:p, 1:p] - Ψ)^2 + norm(Ω[p+1:end, 1:p])^2)   
             if d < ρ
+                print("ρ is not the injectivity radius \n")
                 return true , iter + 1
             end
         end
         iter +=1
     end
+    print("ρ may be  the injectivity radius \n")
     return false , iter
 end
 
