@@ -1,19 +1,25 @@
 using LinearAlgebra, SkewLinearAlgebra, Distributions
 include("skewlog.jl")
 
+"""
+dist_to_I_SOn(Q::AbstractMatrix)
+
+Compute geodesic distance on SO(n)
+
+Input: Q, a matrix of SO(n)
+Output: Distance on SO(n)
+"""
 @views function  dist_to_I_SOn(Q::AbstractMatrix)
-    """
-    Compute geodesic distance on SO(n)
-    Input: Q, a matrix of SO(n)
-    Output: Distance on SO(n)
-    """
     return norm(skewlog(Q)) 
 end
 
+"""
+givens(G::AbstractMatrix, ϕ::Real)
+
+Builds Givens rotation of angle ϕ.
+"""
 @views function givens(G::AbstractMatrix, ϕ::Real)
-    """
-    Builds Givens rotation of angle ϕ.
-    """
+   
     c = cos(ϕ); s = sin(ϕ)
     G[1, 1] = c; G[2, 1] = s
     G[1, 2] = -s; G[2, 2] = c
@@ -21,15 +27,19 @@ end
 end
 
 """
-Equation to be solved for the bound on injectivity radius.
+f(t::Real, α::Real)
+
+f(t) = 0 is the equation to be solved for the bound on injectivity radius with the α-metric.
 """
 f(t::Real, α::Real)  = sin(t) / t + (1 + 2α) * cos(t)
 ∇f(t::Real, α::Real) = (cos(t) * t - sin(t)) / (t * t) - (1 + 2α) * sin(t)
 
+"""
+solvef(t₀::Real, β::Real)
+
+Newton's method to solve f(t, α) = 0
+"""
 function solvef(t₀::Real, β::Real)
-    """
-    Newton's method to solve f(t, α) = 0
-    """
     α = 1 / (2β) - 1
     δ = 1; tol = 1e-14
     itermax = 100; iter = 0
@@ -43,10 +53,14 @@ function solvef(t₀::Real, β::Real)
     return tₙ * sqrt(2) / π
 end
 
+"""
+check_radius_canonical(ρ::Real, β::Real, n::Integer, p::Integer, itermax::Integer)
+
+Returns true if ρ ter than the injectivity radius on the Stiefel manifold St(n,p) endowed with the β-metric.
+
+Stops at itermax otherwise and return false.
+"""
 @views function check_radius_canonical(ρ::Real, β::Real, n::Integer, p::Integer, itermax::Integer)
-    """
-    Returns true if ρ > inj. Stops at itermax otherwise and return false.
-    """
     iszero(β - 1/2) || throw(ArgumentError("check_radius_canonical requires β = 1/2"))
     #If canonical metric and n - p = 1, the search on the fiber makes no sense.
     iszero(n - p - 1) && return ρ > π, 1
@@ -92,13 +106,15 @@ end
                 ∇iter += 1
             end
             if dist_to_I_SOn(Q) * sqrt(2) / 2 < ρ
-                print("ρ is not the injectivity radius \n")
+                print("ρ is greater than the injectivity radius \n")
                 return true, iter + 1
             end
         end
         iter +=1
     end
-    print("ρ may be  the injectivity radius \n")
+    print("Trial budget exceeded. Either ρ is smaller than the injectivity radius; 
+    or it is larger and the algorithm has not been able to find a closer cut time, 
+    a likely event when ρ is only slightly larger than the injectivity radius. \n")
     return false, iter
 end
 
@@ -109,10 +125,14 @@ end
     end
 end
 
+"""
+check_radius(ρ::Real, β::Real, n::Integer, p::Integer, itermax::Integer)
+
+Returns true if ρ ter than the injectivity radius on the Stiefel manifold St(n,p) endowed with the β-metric.
+     
+Stops at itermax otherwise and return false.
+"""
 @views function check_radius(ρ::Real, β::Real, n::Integer, p::Integer, itermax::Integer)
-    """
-    Returns true if ρ > inj. Stops at itermax otherwise and return false.
-    """
     β > 0 || throw(ArgumentError("check_radius_canonical requires β > 0"))
     iszero(β - 1/2) && return check_radius_canonical(ρ, β, n, p, itermax)
     #Allocate memory
@@ -183,13 +203,15 @@ end
             Ψ .=  skewlog(V)                 
             d = sqrt(β * norm(Ω[1:p, 1:p] - Ψ)^2 + norm(Ω[p+1:end, 1:p])^2)   
             if d < ρ
-                print("ρ is not the injectivity radius \n")
+                print("ρ is greater than the injectivity radius \n")
                 return true , iter + 1
             end
         end
         iter +=1
     end
-    print("ρ may be  the injectivity radius \n")
+    print("Trial budget exceeded. Either ρ is smaller than the injectivity radius; 
+    or it is larger and the algorithm has not been able to find a closer cut time, 
+    a likely event when ρ is only slightly larger than the injectivity radius. \n")
     return false , iter
 end
 
