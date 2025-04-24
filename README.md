@@ -1,5 +1,5 @@
 # InjectivityStiefel.jl
-This repository is associated to the publication ["P.-A. Absil, S. Mataigne, The ultimate upper bound on the injectivity radius of the Stiefel manifold, 2024"](https://arxiv.org/abs/2403.02079).
+This repository is associated to the publication ["P.-A. Absil, S. Mataigne, The Ultimate Upper Bound on the Injectivity Radius of the Stiefel Manifold, SIAM Journal on Matrix Analysis and Applications 46(2), 1145-1167, 2025"](https://doi.org/10.1137/24M1644808).
 ## Installation
 In order to use this repository, the user should have a Julia installation where the following packages are installed: `LinearAlgebra`, `SkewLinearAlgebra`, `Plots`, `LaTeXStrings`, `Colors`. These packages are easily obtained from the package installation environment as follows. In Julia REPL, press `]` to access the installation environment and for each package, do
 ```julia
@@ -18,13 +18,17 @@ This repository contains de following folders: `src`, `plots` and `figures`.
 ## Bibtex
 If you use the content of this repository, please cite:
 ```
-@misc{absil2024ultimate,
-      title={The ultimate upper bound on the injectivity radius of the Stiefel manifold}, 
-      author={P. -A. Absil and Simon Mataigne},
-      year={2024},
-      eprint={2403.02079},
-      archivePrefix={arXiv},
-      primaryClass={math.DG}
+@article{doi:10.1137/24M1644808,
+author = {Absil, P.-A. and Mataigne, Simon},
+title = {The Ultimate Upper Bound on the Injectivity Radius of the Stiefel Manifold},
+journal = {SIAM Journal on Matrix Analysis and Applications},
+volume = {46},
+number = {2},
+pages = {1145-1167},
+year = {2025},
+doi = {10.1137/24M1644808},
+URL = {https://doi.org/10.1137/24M1644808},
+eprint = {https://doi.org/10.1137/24M1644808}
 }
 ```
 
